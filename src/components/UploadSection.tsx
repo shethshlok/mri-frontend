@@ -22,11 +22,104 @@ export default function UploadSection({ onContinueToVisualization }: UploadSecti
     'Patient_005_slice_156.nii'
   ];
 
+
+
+  const base64ToBlob = (base64: string, mimeType: string): Blob => {
+    const byteString = atob(base64);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: mimeType });
+  };
+
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Failed to read blob as Base64 string.'));
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const getMriSegmentation = async (): Promise<void> => {
+    try {
+      const storedMriScan = localStorage.getItem('mriScan');
+
+      if (!storedMriScan) {
+        console.error('mriScan not found in local storage.');
+        return;
+      }
+
+      const mriScanObject = JSON.parse(storedMriScan);
+      const base64Url = mriScanObject.url;
+
+      if (!base64Url || typeof base64Url !== 'string') {
+        console.error('Valid URL not found in mriScan object.');
+        return;
+      }
+
+      const parts = base64Url.split(',');
+      const meta = parts[0];
+      const data = parts[1];
+
+      const mimeMatch = meta.match(/:(.*?);/);
+      if (!mimeMatch || !mimeMatch[1]) {
+        console.error('Could not determine MIME type from base64 string.');
+        return;
+      }
+      const mimeType = mimeMatch[1];
+      const imageBlob = base64ToBlob(data, mimeType);
+      const imageFile = new File([imageBlob], 'mri_scan.png', { type: mimeType });
+
+      const formData = new FormData();
+      formData.append('file', imageFile);
+
+      const apiUrl = 'http://localhost:8000/predict/image';
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+
+      const resultBlob = await response.blob();
+      const resultBase64Url = await blobToBase64(resultBlob);
+
+      localStorage.setItem('segmentationMask', resultBase64Url);
+
+    } catch (error) {
+      console.error('An error occurred during the MRI segmentation process:', error);
+    }
+  };
+
+
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setUploadedFile(file);
       toast.success(`File "${file.name}" uploaded successfully`);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const scanData = {
+          name: file.name,
+          url: reader.result as string,
+        };
+        localStorage.removeItem('mriScan');
+        localStorage.setItem('mriScan', JSON.stringify(scanData));
+        getMriSegmentation();
+      };
+      reader.readAsDataURL(file);
     }
   };
 
