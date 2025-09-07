@@ -65,7 +65,7 @@ export default function UploadSection({ onContinueToVisualization }: UploadSecti
                   <span>Upload MRI Scan</span>
                 </CardTitle>
                 <CardDescription>
-                  Upload your own MRI scan in NIfTI format (.nii, .nii.gz)
+                  Upload your own MRI scan in .tif, .jpg, .jpeg, .png formats
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -73,7 +73,7 @@ export default function UploadSection({ onContinueToVisualization }: UploadSecti
                   <input
                     type="file"
                     id="file-upload"
-                    accept=".nii,.nii.gz"
+                    accept=".tif,.jpg,.jpeg,.png"
                     onChange={handleFileUpload}
                     className="hidden"
                   />
@@ -83,7 +83,7 @@ export default function UploadSection({ onContinueToVisualization }: UploadSecti
                       Click to upload or drag and drop
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      NIfTI files (.nii, .nii.gz) up to 100MB
+                      Supported formats: .tif, .jpg, .jpeg, .png up to 100MB
                     </p>
                   </label>
                 </div>
