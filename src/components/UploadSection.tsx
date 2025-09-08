@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, FileImage, Database, ChevronRight } from 'lucide-react';
+import { Upload, FileImage, Database, ChevronRight, Loader } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,9 +10,18 @@ interface UploadSectionProps {
   onContinueToVisualization: () => void;
 }
 
+const LoadingComponent = () => (
+    <div className="inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+      <Loader className="h-16 w-16 animate-spin text-primary" />
+      <p className="mt-4 text-lg text-muted-foreground">Processing your MRI scan...</p>
+      <p className="text-sm text-muted-foreground">This may take a moment. Please don't close this page.</p>
+    </div>
+  );
+
 export default function UploadSection({ onContinueToVisualization }: UploadSectionProps) {
   const [selectedSample, setSelectedSample] = useState<string>('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const sampleDataset = [
     'Patient_001_slice_045.tif',
@@ -49,6 +58,7 @@ export default function UploadSection({ onContinueToVisualization }: UploadSecti
   };
 
   const getMriSegmentation = async (): Promise<void> => {
+    setIsLoading(true);
     try {
       const storedMriScan = localStorage.getItem('mriScan');
 
@@ -95,10 +105,14 @@ export default function UploadSection({ onContinueToVisualization }: UploadSecti
       const resultBase64Url = await blobToBase64(resultBlob);
 
       localStorage.setItem('segmentationMask', resultBase64Url);
+      onContinueToVisualization();
 
     } catch (error) {
       console.error('An error occurred during the MRI segmentation process:', error);
     }
+    finally {
+        setIsLoading(false);
+      }
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,6 +160,10 @@ export default function UploadSection({ onContinueToVisualization }: UploadSecti
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-20">
       <div className="max-w-4xl mx-auto w-full">
+      {isLoading ? (
+          <LoadingComponent />
+        ) : (
+            <>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -264,6 +282,8 @@ export default function UploadSection({ onContinueToVisualization }: UploadSecti
             <ChevronRight className="ml-2 h-4 w-4" />
           </Button>
         </motion.div>
+        </>
+        )}
       </div>
     </div>
   );
