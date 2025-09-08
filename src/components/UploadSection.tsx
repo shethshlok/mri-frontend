@@ -81,7 +81,7 @@ export default function UploadSection({ onContinueToVisualization }: UploadSecti
       const formData = new FormData();
       formData.append('file', imageFile);
 
-      const apiUrl = 'http://localhost:8000/predict/image';
+      const apiUrl = 'http://segment.shloksheth.tech/predict/image';
       const response = await fetch(apiUrl, {
         method: 'POST',
         body: formData,
