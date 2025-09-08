@@ -1,7 +1,5 @@
-import { Brain, Home, Upload, BarChart3, Info, Moon, Sun } from 'lucide-react';
+import { Brain, Home, Upload, BarChart3, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
 interface HeaderProps {
@@ -10,12 +8,6 @@ interface HeaderProps {
 }
 
 export default function Header({ currentSection, onNavigate }: HeaderProps) {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
@@ -56,19 +48,6 @@ export default function Header({ currentSection, onNavigate }: HeaderProps) {
               </Button>
             );
           })}
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="ml-4"
-          >
-            {mounted && theme === 'dark' ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
-          </Button>
         </nav>
       </div>
     </header>
