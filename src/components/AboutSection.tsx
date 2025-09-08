@@ -62,7 +62,7 @@ export default function AboutSection() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="grid md:grid-cols-2 gap-6 mb-12"
         >
-          {features.map((feature, index) => (
+          {features.map((feature) => (
             <motion.div
               key={feature.title}
               whileHover={{ y: -2 }}

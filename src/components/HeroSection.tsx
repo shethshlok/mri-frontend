@@ -70,7 +70,7 @@ export default function HeroSection({ onGetStarted }: HeroSectionProps) {
           transition={{ duration: 0.8, delay: 0.6 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-20"
         >
-          {features.map((feature, index) => (
+          {features.map((feature) => (
             <motion.div
               key={feature.title}
               whileHover={{ y: -5 }}

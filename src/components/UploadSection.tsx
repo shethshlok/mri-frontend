@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, FileImage, Database, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +13,6 @@ interface UploadSectionProps {
 export default function UploadSection({ onContinueToVisualization }: UploadSectionProps) {
   const [selectedSample, setSelectedSample] = useState<string>('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [segmentationMask, setSegmentationMask] = useState<string | null>(null);
 
   const sampleDataset = [
     'Patient_001_slice_045.tif',
@@ -23,14 +22,6 @@ export default function UploadSection({ onContinueToVisualization }: UploadSecti
     'Patient_005_slice_156.tif'
   ];
 
-  useEffect(() => {
-    if (selectedSample) {
-      const storedMask = localStorage.getItem('segmentationMask');
-      if (storedMask) {
-        setSegmentationMask(storedMask);
-      }
-    }
-  }, [selectedSample]);
 
   const base64ToBlob = (base64: string, mimeType: string): Blob => {
     const byteString = atob(base64);
@@ -104,7 +95,6 @@ export default function UploadSection({ onContinueToVisualization }: UploadSecti
       const resultBase64Url = await blobToBase64(resultBlob);
 
       localStorage.setItem('segmentationMask', resultBase64Url);
-      setSegmentationMask(resultBase64Url);
 
     } catch (error) {
       console.error('An error occurred during the MRI segmentation process:', error);
