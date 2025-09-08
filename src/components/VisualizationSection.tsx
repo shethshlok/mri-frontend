@@ -360,7 +360,7 @@ export default function VisualizationSection() {
             </Card>
 
             <Card>
-                <CardHeader><CardTitle>Before/After Comparison</CardTitle></CardHeader>
+                <CardHeader><CardTitle>Controlled Overlay</CardTitle></CardHeader>
                 <CardContent>
                 <div
                     ref={compareRef}
