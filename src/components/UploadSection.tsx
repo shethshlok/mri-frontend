@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, FileImage, Database, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,16 +13,24 @@ interface UploadSectionProps {
 export default function UploadSection({ onContinueToVisualization }: UploadSectionProps) {
   const [selectedSample, setSelectedSample] = useState<string>('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [segmentationMask, setSegmentationMask] = useState<string | null>(null);
 
   const sampleDataset = [
-    'Patient_001_slice_045.nii',
-    'Patient_002_slice_067.nii',
-    'Patient_003_slice_032.nii',
-    'Patient_004_slice_089.nii',
-    'Patient_005_slice_156.nii'
+    'Patient_001_slice_045.tif',
+    'Patient_002_slice_067.tif',
+    'Patient_003_slice_032.tif',
+    'Patient_004_slice_089.tif',
+    'Patient_005_slice_156.tif'
   ];
 
-
+  useEffect(() => {
+    if (selectedSample) {
+      const storedMask = localStorage.getItem('segmentationMask');
+      if (storedMask) {
+        setSegmentationMask(storedMask);
+      }
+    }
+  }, [selectedSample]);
 
   const base64ToBlob = (base64: string, mimeType: string): Blob => {
     const byteString = atob(base64);
@@ -96,18 +104,18 @@ export default function UploadSection({ onContinueToVisualization }: UploadSecti
       const resultBase64Url = await blobToBase64(resultBlob);
 
       localStorage.setItem('segmentationMask', resultBase64Url);
+      setSegmentationMask(resultBase64Url);
 
     } catch (error) {
       console.error('An error occurred during the MRI segmentation process:', error);
     }
   };
 
-
-
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setUploadedFile(file);
+      setSelectedSample('');
       toast.success(`File "${file.name}" uploaded successfully`);
       const reader = new FileReader();
       reader.onload = () => {
@@ -123,9 +131,24 @@ export default function UploadSection({ onContinueToVisualization }: UploadSecti
     }
   };
 
-  const handleSampleSelect = (value: string) => {
+  const handleSampleSelect = async (value: string) => {
     setSelectedSample(value);
+    setUploadedFile(null);
     toast.info(`Sample "${value}" selected`);
+
+    const response = await fetch(`/${value}`);
+    const blob = await response.blob();
+    const reader = new FileReader();
+    reader.onload = () => {
+      const scanData = {
+        name: value,
+        url: reader.result as string,
+      };
+      localStorage.removeItem('mriScan');
+      localStorage.setItem('mriScan', JSON.stringify(scanData));
+      getMriSegmentation();
+    };
+    reader.readAsDataURL(blob);
   };
 
   const canProceed = selectedSample || uploadedFile;
@@ -192,6 +215,7 @@ export default function UploadSection({ onContinueToVisualization }: UploadSecti
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+.
                     </p>
                   </motion.div>
                 )}
@@ -228,20 +252,7 @@ export default function UploadSection({ onContinueToVisualization }: UploadSecti
                   </SelectContent>
                 </Select>
 
-                {selectedSample && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="grid grid-cols-2 gap-2"
-                  >
-                    <div className="aspect-square bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg flex items-center justify-center">
-                      <span className="text-xs text-muted-foreground">MRI Preview</span>
-                    </div>
-                    <div className="aspect-square bg-gradient-to-br from-blue-900 to-blue-800 rounded-lg flex items-center justify-center">
-                      <span className="text-xs text-muted-foreground">Mask Preview</span>
-                    </div>
-                  </motion.div>
-                )}
+                
               </CardContent>
             </Card>
           </motion.div>
